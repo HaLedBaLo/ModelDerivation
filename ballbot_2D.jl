@@ -7,6 +7,7 @@ include("misc.jl")
 # state variables
 @syms x, dx, ddx 
 @syms alpha, dalpha, ddalpha
+@syms tau
 # model constants
 @syms r_b, r_w
 @syms m_b, m_t
@@ -65,21 +66,10 @@ for i = 1:len_state
 end
 eqm = dL_ddq.diff(t) - dL_dq
 # substitute time dependent variables
-eqm = remove_time_dependencies(eqm, ddq_, dq_, q_, ddq, dq, q)
+eqm = remove_time_dependencies(eqm, [ddq_; dq_; q_], [ddq; dq; q])
 
 ## Mass matrix
-M = sympy.zeros(2,2)
-
-eqm_tmp = expand.(eqm)
-for i = 1:2
-    for j = 1:2
-        collection = collect(eqm_tmp[i], ddq[j])
-        if (collection.coeff(ddq[j]) != 0)
-            M[i,j] = collection.coeff(ddq[j])
-            eqm_tmp[i] = expand(eqm_tmp[i] - M[i,j]*ddq[j])
-        end
-    end
-end
+M, eqm_tmp = collect_variable(eqm, ddq, [2,2])
 
 ## Corriolis matrix
 C = sympy.zeros(2,2);
@@ -98,7 +88,12 @@ end
 G = eqm_tmp
 
 ## Verify Matrix calculation
-simplify.(eqm - M * ddq - C * dq - G)
+if (simplify.(eqm - M * ddq - C * dq - G) != zeros(2,1))
+    print("equation of motion did not resolve to zero")
+end
 
 ## Generalized forces
-# omega_m
+omega_m = remove_time_dependencies(omega_m, dq_, dq)
+J_m, rest = collect_variable(omega_m, dq, [1,2])
+
+Q = J_m.transpose()
