@@ -1,6 +1,6 @@
 using SymPy
 
-include("misc.jl")
+include("../misc.jl")
 
 # time
 @syms t
@@ -97,3 +97,9 @@ omega_m = remove_time_dependencies(omega_m, dq_, dq)
 J_m, rest = collect_variable(omega_m, dq, [1,2])
 
 Q = J_m.transpose()
+
+## Export variables
+export_function(M, "bb2d_M", [q; dq])
+export_function(C, "bb2d_C", [q; dq])
+export_function(G, "bb2d_G", [q; dq])
+export_function(Q, "bb2d_Q")
