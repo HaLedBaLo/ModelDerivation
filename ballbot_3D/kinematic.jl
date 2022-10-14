@@ -1,15 +1,17 @@
 using SymPy
+using LinearAlgebra
 
 include("../rotations.jl")
 
-v = [0; 0; 1]
+function omniwheel_kinematics(angle_x, angle_y, angle_z)
+    v = [0; 0; -1]
 
-angle_x = pi / 4
-angle_y = pi / 12
-angle_z = 2 / 3 * pi      # 120 deg
+    v1 = rot_3d(angle_x, angle_y, 0) * v
+    v2 = rot_3d(angle_x, angle_y, angle_z) * v
+    v3 = rot_3d(angle_x, angle_y, -angle_z) * v
 
-vx = rot_3d(angle_x, angle_y, 0) * v
-vy = rot_3d(angle_x, angle_y, angle_z) * v
-vz = rot_3d(angle_x, angle_y, -angle_z) * v
+    inv_kin = transpose([v1 v2 v3])
+    for_kin = inv(inv_kin)
 
-kin = [vx vy vz]
+    return for_kin, inv_kin
+end

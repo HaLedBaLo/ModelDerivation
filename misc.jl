@@ -15,8 +15,8 @@ function collect_variable(input::Array, variable, dims)
         for j = 1:dims[2]
             col = collect(rest[i], variable[j])
             if (col.coeff(variable[j]) != 0)
-                collection[i,j] = col.coeff(variable[j])
-                rest[i] -= expand(collection[i,j] * variable[j])
+                collection[i, j] = col.coeff(variable[j])
+                rest[i] -= expand(collection[i, j] * variable[j])
             end
         end
     end
@@ -55,7 +55,7 @@ function check_variable_existence(var1, var2::Vector)
                 exists = true
                 break
             end
-            end
+        end
     end
     return exists
 end
@@ -67,7 +67,7 @@ function export_variable(variable, name::String)
         mkdir("export")
     end
     open(filename, "w") do io
-        write(io,filecontent )
+        write(io, filecontent)
     end
 end
 
@@ -77,7 +77,7 @@ function export_function(variable, name::String)
         mkdir("export")
     end
     open(filename, "w") do io
-        write(io, "function ") 
+        write(io, "function ")
         write(io, name)
         write(io, "()\n\treturn ")
         write(io, string(variable)[4:end])
@@ -91,7 +91,7 @@ function export_function(variable, name::String, argin::Sym)
         mkdir("export")
     end
     open(filename, "w") do io
-        write(io, "function ") 
+        write(io, "function ")
         write(io, name)
         write(io, "(")
         write(io, string(argin))
@@ -107,11 +107,11 @@ function export_function(variable, name::String, argin::Vector{Sym})
         mkdir("export")
     end
     open(filename, "w") do io
-        write(io, "function ") 
+        write(io, "function ")
         write(io, name)
         write(io, "(")
         n_argin = lastindex(argin)
-        argin_found = falses(n_argin,1)
+        argin_found = falses(n_argin, 1)
         for i = 1:n_argin
             if (check_variable_existence(variable, argin[i]))
                 argin_found[i] = true
