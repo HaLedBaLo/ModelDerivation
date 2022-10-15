@@ -76,9 +76,9 @@ function export_variable(variable, name::String)
     if (!isdir("export"))
         mkdir("export")
     end
-    open(filename, "w") do io
-        write(io, filecontent)
-    end
+    io = open(filename, "w")
+    write(io, filecontent)
+    close(io)
 end
 
 function export_function(variable, name::String)
@@ -86,13 +86,13 @@ function export_function(variable, name::String)
     if (!isdir("export"))
         mkdir("export")
     end
-    open(filename, "w") do io
-        write(io, "function ")
-        write(io, name)
-        write(io, "()\n\treturn ")
-        write(io, string(variable)[4:end])
-        write(io, "\nend")
-    end
+    io = (filename, "w")
+    write(io, "function ")
+    write(io, name)
+    write(io, "()\n\treturn ")
+    write(io, string(variable)[4:end])
+    write(io, "\nend")
+    close(io)
 end
 
 function export_function(variable, name::String, argin::Sym)
@@ -100,15 +100,15 @@ function export_function(variable, name::String, argin::Sym)
     if (!isdir("export"))
         mkdir("export")
     end
-    open(filename, "w") do io
-        write(io, "function ")
-        write(io, name)
-        write(io, "(")
-        write(io, string(argin))
-        write(io, ")\n\treturn ")
-        write(io, string(variable)[4:end])
-        write(io, "\nend")
-    end
+    io = open(filename, "w")
+    write(io, "function ")
+    write(io, name)
+    write(io, "(")
+    write(io, string(argin))
+    write(io, ")\n\treturn ")
+    write(io, string(variable)[4:end])
+    write(io, "\nend")
+    close(io)
 end
 
 function export_function(variable, name::String, argin::Vector{Sym})
