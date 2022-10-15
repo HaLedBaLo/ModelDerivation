@@ -28,7 +28,6 @@ q_ = [x_; alpha_]
 dq_ = q_.diff(t)
 ddq_ = dq_.diff(t)
 
-
 ## positions
 # ball position
 p_b = [x_; 0]
