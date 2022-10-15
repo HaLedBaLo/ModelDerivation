@@ -57,23 +57,13 @@ L = T_b[] + T_t[] + T_w[] - V_t[]
 
 ## Lagrange's equations
 eqm = calculate_equationofmotion_from_lagrangian(L, q_)
-eqm = remove_time_dependencies(eqm, [ddq_; dq_; q_], [ddq; dq; q])
+eqm = replace_variables(eqm, [ddq_; dq_; q_], [ddq; dq; q])
 
 ## Mass matrix
 M, eqm_tmp = collect_variable(eqm, ddq, [2, 2])
 
 ## Corriolis matrix
-C = sympy.zeros(2, 2);
-
-for i = 1:2
-    for j = 1:2
-        collection = collect(eqm_tmp[i], dq[j]^2)
-        if (collection.coeff(dq[j]^2) != 0)
-            C[i, j] = collection.coeff(dq[j]^2) * dq[j]
-            eqm_tmp[i] = expand(eqm_tmp[i] - C[i, j] * dq[j])
-        end
-    end
-end
+C, eqm_tmp = collect_corioli_matrix(eqm_tmp, dq, [2, 2])
 
 ## Gravity vector
 G = eqm_tmp
@@ -83,8 +73,16 @@ if (simplify.(eqm - M * ddq - C * dq - G) != zeros(2, 1))
     print("equation of motion did not resolve to zero")
 end
 
+# Check skew symmetry
+M_ = replace_variables(M, [ddq; dq; q], [ddq_; dq_; q_])
+C_ = replace_variables(C, [ddq; dq; q], [ddq_; dq_; q_])
+dM_ = M_.diff(t)
+if (simplify.(transpose(dM_ - 2 * C) + dM_ - 2 * C) != sympy.zeros(5, 5))
+    println("corioli matrix not skew symmetric")
+end
+
 ## Generalized forces
-omega_m = remove_time_dependencies(omega_m, dq_, dq)
+omega_m = replace_variables(omega_m, dq_, dq)
 J_m, rest = collect_variable(omega_m, dq, [1, 2])
 
 Q = J_m.transpose()

@@ -10,40 +10,66 @@ function calculate_equationofmotion_from_lagrangian(lagrangian, states)
     return eqm
 end
 
-function remove_time_dependencies(var, old, new)
+function replace_variables(var, old, new)
     for i = 1:lastindex(old)
         var = var.subs(old[i], new[i])
     end
     return var
 end
 
-function collect_variable(input::Array, variable, dims)
+function collect_variable(input::Array, vars, dims)
     collection = sympy.zeros(dims[1], dims[2])
     rest = expand.(input)
 
     for i = 1:dims[1]
         for j = 1:dims[2]
-            col = collect(rest[i], variable[j])
-            if (col.coeff(variable[j]) != 0)
-                collection[i, j] = col.coeff(variable[j])
-                rest[i] -= expand(collection[i, j] * variable[j])
+            col = collect(rest[i], vars[j])
+            coeff = col.coeff(vars[j])
+            if (coeff != 0)
+                collection[i, j] = coeff
+                rest[i] -= expand(coeff * vars[j])
             end
         end
     end
     return collection, rest
 end
 
-function collect_variable(input::Sym, variable, dims)
+function collect_variable(input::Sym, vars, dims)
     collection = sympy.zeros(dims[1], dims[2])
     rest = expand(input)
     for i = 1:maximum(dims)
-        col = collect(rest, variable[i])
-        if (col.coeff(variable[i]) != 0)
-            collection[i] = col.coeff(variable[i])
-            rest -= expand(collection[i] * variable[i])
+        col = collect(rest, vars[i])
+        coeff = col.coeff(vars[i])
+        if (coeff != 0)
+            collection[i] = coeff
+            rest -= expand(coeff * vars[i])
         end
     end
     return collection, rest
+end
+
+function collect_corioli_matrix(input::Array, vars, dims)
+    corioli = sympy.zeros(dims[1], dims[2])
+    rest = expand.(input)
+    for i = 1:dims[1]
+        for j = 1:dims[2]
+            col = collect(rest[i], vars[j]^2)
+            coeff = col.coeff(vars[j]^2)
+            if (coeff != 0)
+                corioli[i, j] = coeff * vars[j]
+                rest[i] -= expand(coeff * vars[j]^2)
+            end
+        end
+        for j = 1:dims[2]
+            col = collect(rest[i], vars[j])
+            coeff = col.coeff(vars[j])
+            if (coeff != 0)
+                corioli[i, j] += coeff
+                rest[i] -= expand(coeff * vars[j])
+            end
+        end
+    end
+    return corioli, rest
 end
 
 function check_variable_existence(var1, var2)
@@ -86,7 +112,7 @@ function export_function(variable, name::String)
     if (!isdir("export"))
         mkdir("export")
     end
-    io = (filename, "w")
+    io = open(filename, "w")
     write(io, "function ")
     write(io, name)
     write(io, "()\n\treturn ")

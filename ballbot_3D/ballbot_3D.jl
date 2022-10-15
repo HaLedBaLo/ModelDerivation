@@ -1,4 +1,5 @@
 using SymPy
+using LinearAlgebra
 
 include("../misc.jl")
 include("../rotations.jl")
@@ -78,33 +79,32 @@ T_wheel = rot_vel_wheel.T * I_w / 2 * rot_vel_wheel
 # Lagrangian
 lagrangian = T_ball[] + T_torso[] + T_wheel[] - V_torso[] - V_ball[]
 eqm = calculate_equationofmotion_from_lagrangian(lagrangian, q_)
-eqm = remove_time_dependencies(eqm, [ddq_; dq_; q_], [ddq; dq; q])
+eqm = replace_variables(eqm, [ddq_; dq_; q_], [ddq; dq; q])
 
 # Mass Matrix
 M, eqm_tmp = collect_variable(eqm, ddq, [5, 5])
 
 # Corioli Matrix
-C = sympy.zeros(5, 5);
-for i = 1:5
-    for j = 1:5
-        collection = collect(eqm_tmp[i], dq[j]^2)
-        if (collection.coeff(dq[j]^2) != 0)
-            C[i, j] = collection.coeff(dq[j]^2) * dq[j]
-            eqm_tmp[i] = expand(eqm_tmp[i] - C[i, j] * dq[j])
-        end
-    end
-end
+C, eqm_tmp = collect_corioli_matrix(eqm_tmp, dq, [5, 5])
 
 # Gravity vector
 G = eqm_tmp
 
 # Verify Matrix calculation
-if (simplify.(eqm - M * ddq - C * dq - G) != zeros(5, 1))
-    print("equation of motion did not resolve to zero")
+if (simplify.(eqm - M * ddq - C * dq - G) != sympy.zeros(5, 1))
+    println("equation of motion did not resolve to zero")
+end
+
+# Check skew symmetry
+M_ = replace_variables(M, [ddq; dq; q], [ddq_; dq_; q_])
+C_ = replace_variables(C, [ddq; dq; q], [ddq_; dq_; q_])
+dM_ = M_.diff(t)
+if (simplify.(transpose(dM_ - 2 * C) + dM_ - 2 * C) != sympy.zeros(5, 5))
+    println("corioli matrix not skew symmetric")
 end
 
 # Motor torques
-rot_vel_wheel = remove_time_dependencies(rot_vel_wheel, [dq_ q_], [dq q])
+rot_vel_wheel = replace_variables(rot_vel_wheel, [dq_ q_], [dq q])
 J_wheel = sympy.zeros(5, 3);
 for i = 1:5
     for j = 1:3
