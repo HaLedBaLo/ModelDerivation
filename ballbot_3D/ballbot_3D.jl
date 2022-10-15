@@ -1,5 +1,4 @@
 using SymPy
-using LinearAlgebra
 
 include("../misc.jl")
 include("../rotations.jl")
@@ -50,9 +49,11 @@ for_kin, inv_kin = omniwheel_kinematics(
 for_kin *= r_w / r_b
 inv_kin *= r_b / r_w
 
+rot_global_to_torso = rot_3d(q_[3], q_[4], q_[5])
+
 # Positions
 p_ball = [q_[1:2]; r_b]
-p_torso = p_ball + rot_3d(q_[3], q_[4], q_[5]) * l
+p_torso = p_ball + rot_global_to_torso * l
 
 # Velocities
 lin_vel_ball = p_ball.diff(t)
@@ -61,7 +62,7 @@ rot_vel_ball = lin_vel_ball / r_b
 lin_vel_torso = p_torso.diff(t)
 rot_vel_torso = dq_[3:5]
 
-rot_vel_wheel = inv_kin * (rot_vel_ball - rot_vel_t)
+rot_vel_wheel = inv_kin * (rot_global_to_torso * rot_vel_ball - rot_vel_torso)
 
 # Potential energies
 V_ball = m_b * grav.T * p_ball
@@ -102,3 +103,17 @@ if (simplify.(eqm - M * ddq - C * dq - G) != zeros(5, 1))
     print("equation of motion did not resolve to zero")
 end
 
+# Motor torques
+rot_vel_wheel = remove_time_dependencies(rot_vel_wheel, [dq_ q_], [dq q])
+J_wheel = sympy.zeros(5, 3);
+for i = 1:5
+    for j = 1:3
+        J_wheel[i, j] = rot_vel_wheel[j].diff(dq[i])
+    end
+end
+
+# Export variables
+export_function(M, "bb3d_M", [q; dq])
+export_function(C, "bb3d_C", [q; dq])
+export_function(G, "bb3d_G", [q; dq])
+export_function(J_wheel, "bb3d_Q", [q; dq])

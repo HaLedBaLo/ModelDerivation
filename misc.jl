@@ -116,30 +116,40 @@ function export_function(variable, name::String, argin::Vector{Sym})
     if (!isdir("export"))
         mkdir("export")
     end
-    open(filename, "w") do io
-        write(io, "function ")
-        write(io, name)
-        write(io, "(")
-        n_argin = lastindex(argin)
-        argin_found = falses(n_argin, 1)
-        for i = 1:n_argin
-            if (check_variable_existence(variable, argin[i]))
-                argin_found[i] = true
-            end
+    io = open(filename, "w")
+    write(io, "function ")
+    write(io, name)
+    write(io, "(")
+    n_argin = lastindex(argin)
+    argin_found = falses(n_argin, 1)
+    for i = 1:n_argin
+        if (check_variable_existence(variable, argin[i]))
+            argin_found[i] = true
         end
-        n_matches = sum(argin_found)
-        if (n_matches > 0)
-            for i = 1:n_argin
-                if argin_found[i]
-                    write(io, string(argin[i]))
-                    if (i < n_matches)
-                        write(io, ", ")
-                    end
+    end
+    last_index = get_last_true_index(argin_found)
+    if (last_index > 0)
+        for i = 1:n_argin
+            if argin_found[i]
+                write(io, string(argin[i]))
+                if (i < last_index)
+                    write(io, ", ")
                 end
             end
         end
-        write(io, ")\n\treturn ")
-        write(io, string(variable)[4:end])
-        write(io, "\nend")
     end
+    write(io, ")\n\treturn ")
+    write(io, string(variable)[4:end])
+    write(io, "\nend")
+    close(io)
+end
+
+function get_last_true_index(vector)
+    index = 0
+    for i = 1:lastindex(vector)
+        if (vector[i])
+            index = i
+        end
+    end
+    return index
 end
