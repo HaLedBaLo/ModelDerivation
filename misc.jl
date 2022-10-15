@@ -1,4 +1,14 @@
-
+function calculate_equationofmotion_from_lagrangian(lagrangian, states)
+    len_state = length(states)
+    dL_dq = sympy.zeros(len_state, 1)
+    dL_ddq = sympy.zeros(len_state, 1)
+    for i = 1:len_state
+        dL_dq[i] = lagrangian.diff(q_[i])
+        dL_ddq[i] = lagrangian.diff(dq_[i])
+    end
+    eqm = dL_ddq.diff(t) - dL_dq
+    return eqm
+end
 
 function remove_time_dependencies(var, old, new)
     for i = 1:lastindex(old)
