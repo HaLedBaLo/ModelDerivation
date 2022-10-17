@@ -105,7 +105,7 @@ for i = 1:5
 end
 
 # Export variables
-export_function(M, "bb3d_M")
-export_function(C, "bb3d_C")
-export_function(G, "bb3d_G")
-export_function(J_wheel, "bb3d_Q")
+export_function(M, "M_bb3d")
+export_function(C, "C_bb3d")
+export_function(G, "G_bb3d")
+export_function(J_wheel, "Q_bb3d")

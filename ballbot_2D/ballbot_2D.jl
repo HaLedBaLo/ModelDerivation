@@ -80,7 +80,7 @@ J_m, rest = collect_variable(omega_m, dq, [1, 2])
 Q = J_m.transpose()
 
 ## Export variables
-export_function(M, "bb2d_M")
-export_function(C, "bb2d_C")
-export_function(G, "bb2d_G")
-export_function(Q, "bb2d_Q")
+export_function(M, "M_bb2d")
+export_function(C, "C_bb2d")
+export_function(G, "G_bb2d")
+export_function(Q, "Q_bb2d")
