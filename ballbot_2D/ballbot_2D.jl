@@ -73,14 +73,6 @@ if (simplify.(eqm - M * ddq - C * dq - G) != zeros(2, 1))
     print("equation of motion did not resolve to zero")
 end
 
-# Check skew symmetry
-M_ = replace_variables(M, [ddq; dq; q], [ddq_; dq_; q_])
-C_ = replace_variables(C, [ddq; dq; q], [ddq_; dq_; q_])
-dM_ = M_.diff(t)
-if (simplify.(transpose(dM_ - 2 * C) + dM_ - 2 * C) != sympy.zeros(5, 5))
-    println("corioli matrix not skew symmetric")
-end
-
 ## Generalized forces
 omega_m = replace_variables(omega_m, dq_, dq)
 J_m, rest = collect_variable(omega_m, dq, [1, 2])
@@ -88,7 +80,7 @@ J_m, rest = collect_variable(omega_m, dq, [1, 2])
 Q = J_m.transpose()
 
 ## Export variables
-export_function(M, "bb2d_M", [q; dq])
-export_function(C, "bb2d_C", [q; dq])
-export_function(G, "bb2d_G", [q; dq])
+export_function(M, "bb2d_M")
+export_function(C, "bb2d_C")
+export_function(G, "bb2d_G")
 export_function(Q, "bb2d_Q")

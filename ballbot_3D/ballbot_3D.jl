@@ -95,14 +95,6 @@ if (simplify.(eqm - M * ddq - C * dq - G) != sympy.zeros(5, 1))
     println("equation of motion did not resolve to zero")
 end
 
-# Check skew symmetry
-M_ = replace_variables(M, [ddq; dq; q], [ddq_; dq_; q_])
-C_ = replace_variables(C, [ddq; dq; q], [ddq_; dq_; q_])
-dM_ = M_.diff(t)
-if (simplify.(transpose(dM_ - 2 * C) + dM_ - 2 * C) != sympy.zeros(5, 5))
-    println("corioli matrix not skew symmetric")
-end
-
 # Motor torques
 rot_vel_wheel = replace_variables(rot_vel_wheel, [dq_ q_], [dq q])
 J_wheel = sympy.zeros(5, 3);
@@ -113,7 +105,7 @@ for i = 1:5
 end
 
 # Export variables
-export_function(M, "bb3d_M", [q; dq])
-export_function(C, "bb3d_C", [q; dq])
-export_function(G, "bb3d_G", [q; dq])
-export_function(J_wheel, "bb3d_Q", [q; dq])
+export_function(M, "bb3d_M")
+export_function(C, "bb3d_C")
+export_function(G, "bb3d_G")
+export_function(J_wheel, "bb3d_Q")

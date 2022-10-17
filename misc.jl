@@ -1,3 +1,5 @@
+using SymPy
+
 function calculate_equationofmotion_from_lagrangian(lagrangian, states)
     len_state = length(states)
     dL_dq = sympy.zeros(len_state, 1)
@@ -112,70 +114,37 @@ function export_function(variable, name::String)
     if (!isdir("export"))
         mkdir("export")
     end
+
+    # get arguments of function and common subexpressions for faster execution
+    arguments = free_symbols(vec(variable))
+    subexpressions, variable = sympy.cse(variable)
+
     io = open(filename, "w")
-    write(io, "function ")
-    write(io, name)
-    write(io, "()\n\treturn ")
-    write(io, string(variable)[4:end])
+    write(io, string("function ", name, "("))
+    write_vector(arguments, io)
+    write(io, ")\n")
+    if (~isempty(subexpressions))
+        write_tuple(subexpressions, io)
+    end
+    write(io, "\treturn ")
+    write(io, string(variable[1])[4:end])
     write(io, "\nend")
     close(io)
 end
 
-function export_function(variable, name::String, argin::Sym)
-    filename = string("export/", name, ".jl")
-    if (!isdir("export"))
-        mkdir("export")
+function write_vector(vector, io)
+    last_index = lastindex(vector)
+    for i = 1:last_index
+        if (i == last_index)
+            write(io, string(vector[i]))
+        else
+            write(io, string(vector[i], ", "))
+        end
     end
-    io = open(filename, "w")
-    write(io, "function ")
-    write(io, name)
-    write(io, "(")
-    write(io, string(argin))
-    write(io, ")\n\treturn ")
-    write(io, string(variable)[4:end])
-    write(io, "\nend")
-    close(io)
 end
 
-function export_function(variable, name::String, argin::Vector{Sym})
-    filename = string("export/", name, ".jl")
-    if (!isdir("export"))
-        mkdir("export")
+function write_tuple(tuple, io)
+    for i = 1:lastindex(tuple)
+        write(io, string("  ", tuple[i][1], " = ", tuple[i][2], "\n"))
     end
-    io = open(filename, "w")
-    write(io, "function ")
-    write(io, name)
-    write(io, "(")
-    n_argin = lastindex(argin)
-    argin_found = falses(n_argin, 1)
-    for i = 1:n_argin
-        if (check_variable_existence(variable, argin[i]))
-            argin_found[i] = true
-        end
-    end
-    last_index = get_last_true_index(argin_found)
-    if (last_index > 0)
-        for i = 1:n_argin
-            if argin_found[i]
-                write(io, string(argin[i]))
-                if (i < last_index)
-                    write(io, ", ")
-                end
-            end
-        end
-    end
-    write(io, ")\n\treturn ")
-    write(io, string(variable)[4:end])
-    write(io, "\nend")
-    close(io)
-end
-
-function get_last_true_index(vector)
-    index = 0
-    for i = 1:lastindex(vector)
-        if (vector[i])
-            index = i
-        end
-    end
-    return index
 end
